@@ -27,9 +27,7 @@ from sklearn.pipeline import Pipeline
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger("GreenLeafPreprocess")
 
@@ -50,23 +48,32 @@ def split_data(
     train_ratio: float = 0.70,
     val_ratio: float = 0.15,
     test_ratio: float = 0.15,
-    random_state: int = 42
+    random_state: int = 42,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Splits data into train, validation, and test sets.
     Preserves chronological order if 'date' column is present, otherwise shuffles.
     """
-    assert np.isclose(train_ratio + val_ratio + test_ratio, 1.0), "Split ratios must sum to 1.0"
+    assert np.isclose(
+        train_ratio + val_ratio + test_ratio, 1.0
+    ), "Split ratios must sum to 1.0"
 
-    logger.info("Splitting dataset: Train=%.2f, Val=%.2f, Test=%.2f", train_ratio, val_ratio, test_ratio)
-    
+    logger.info(
+        "Splitting dataset: Train=%.2f, Val=%.2f, Test=%.2f",
+        train_ratio,
+        val_ratio,
+        test_ratio,
+    )
+
     if "date" in df.columns:
-        logger.info("Sorting chronologically by 'date' for realistic time-series split.")
+        logger.info(
+            "Sorting chronologically by 'date' for realistic time-series split."
+        )
         df_sorted = df.sort_values("date").reset_index(drop=True)
         n = len(df_sorted)
         train_end = int(n * train_ratio)
         val_end = int(n * (train_ratio + val_ratio))
-        
+
         train_df = df_sorted.iloc[:train_end].copy()
         val_df = df_sorted.iloc[train_end:val_end].copy()
         test_df = df_sorted.iloc[val_end:].copy()
@@ -80,7 +87,12 @@ def split_data(
         val_df = shuffled.iloc[train_end:val_end].copy()
         test_df = shuffled.iloc[val_end:].copy()
 
-    logger.info("Split shapes -> Train: %s, Val: %s, Test: %s", train_df.shape, val_df.shape, test_df.shape)
+    logger.info(
+        "Split shapes -> Train: %s, Val: %s, Test: %s",
+        train_df.shape,
+        val_df.shape,
+        test_df.shape,
+    )
     return train_df, val_df, test_df
 
 
@@ -89,7 +101,12 @@ class LeakFreeImputer(BaseEstimator, TransformerMixin):
     Custom scikit-learn transformer that learns imputation statistics strictly during fit()
     (numerical medians and categorical modes) and applies them during transform().
     """
-    def __init__(self, numeric_cols: Optional[List[str]] = None, categorical_cols: Optional[List[str]] = None):
+
+    def __init__(
+        self,
+        numeric_cols: Optional[List[str]] = None,
+        categorical_cols: Optional[List[str]] = None,
+    ):
         self.numeric_cols = numeric_cols or []
         self.categorical_cols = categorical_cols or []
         self.statistics_: Dict[str, Any] = {}
@@ -134,6 +151,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     Custom scikit-learn transformer for one-hot encoding categorical variables
     while preserving clean pandas DataFrame outputs.
     """
+
     def __init__(self, categorical_cols: Optional[List[str]] = None):
         self.categorical_cols = categorical_cols or []
         self.categories_: Dict[str, List[str]] = {}
@@ -162,14 +180,16 @@ def compute_and_apply_imputation(
     val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     numeric_cols: list,
-    categorical_cols: list
+    categorical_cols: list,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any]]:
     """
     Helper function that computes imputation statistics strictly on the training split,
     and applies them across train, validation, and test splits to prevent data leakage.
     """
     logger.info("Computing imputation statistics on training split...")
-    imputer = LeakFreeImputer(numeric_cols=numeric_cols, categorical_cols=categorical_cols)
+    imputer = LeakFreeImputer(
+        numeric_cols=numeric_cols, categorical_cols=categorical_cols
+    )
     imputer.fit(train_df)
 
     train_imputed = imputer.transform(train_df)
@@ -184,30 +204,36 @@ def build_pipeline(numeric_cols: list, categorical_cols: list) -> Pipeline:
     """
     Builds an sklearn.pipeline.Pipeline chaining imputation and categorical encoding.
     """
-    pipeline = Pipeline(steps=[
-        ("imputer", LeakFreeImputer(numeric_cols=numeric_cols, categorical_cols=categorical_cols)),
-        ("encoder", CategoricalEncoder(categorical_cols=categorical_cols))
-    ])
+    pipeline = Pipeline(
+        steps=[
+            (
+                "imputer",
+                LeakFreeImputer(
+                    numeric_cols=numeric_cols, categorical_cols=categorical_cols
+                ),
+            ),
+            ("encoder", CategoricalEncoder(categorical_cols=categorical_cols)),
+        ]
+    )
     return pipeline
 
 
 def run_pipeline(
-    raw_csv_path: str = "data/raw/sales_data.csv",
-    output_dir: str = "data/processed"
+    raw_csv_path: str = "data/raw/sales_data.csv", output_dir: str = "data/processed"
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Executes the end-to-end data cleaning, imputation, and splitting pipeline.
     Saves clean CSV files in output_dir.
     """
     logger.info("=== Starting GreenLeaf Grocery Data Pipeline ===")
-    
+
     # 1. Load Data
     df = load_raw_data(raw_csv_path)
 
     # Define column groups
     numeric_features = ["unit_price", "inventory_level"]
     categorical_features = ["category", "promotion"]
-    
+
     numeric_features = [col for col in numeric_features if col in df.columns]
     categorical_features = [col for col in categorical_features if col in df.columns]
 
@@ -220,7 +246,11 @@ def run_pipeline(
     )
 
     # Verify no missing values remain in processed splits
-    for name, split in [("Train", train_clean), ("Val", val_clean), ("Test", test_clean)]:
+    for name, split in [
+        ("Train", train_clean),
+        ("Val", val_clean),
+        ("Test", test_clean),
+    ]:
         null_count = split[numeric_features + categorical_features].isnull().sum().sum()
         logger.info("%s split remaining null values: %d", name, null_count)
         if null_count > 0:
@@ -240,7 +270,9 @@ def run_pipeline(
     logger.info(" - %s (%d rows)", train_path, len(train_clean))
     logger.info(" - %s (%d rows)", val_path, len(val_clean))
     logger.info(" - %s (%d rows)", test_path, len(test_clean))
-    logger.info("=== GreenLeaf Grocery Preprocessing Pipeline Finished Successfully ===")
+    logger.info(
+        "=== GreenLeaf Grocery Preprocessing Pipeline Finished Successfully ==="
+    )
 
     return train_clean, val_clean, test_clean
 

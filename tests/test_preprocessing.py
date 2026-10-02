@@ -16,38 +16,52 @@ import pandas as pd
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from preprocess import (
-    load_raw_data,
+from preprocess import (  # noqa: E402
     split_data,
     compute_and_apply_imputation,
     build_pipeline,
-    LeakFreeImputer,
-    run_pipeline
+    run_pipeline,
 )
-from generate_data import generate_greenleaf_sales_data
+from generate_data import generate_greenleaf_sales_data  # noqa: E402
 
 
 @pytest.fixture
 def sample_raw_dataframe():
     """Provides a synthetic DataFrame with deliberate missing values for testing."""
     data = {
-        "date": ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06"],
+        "date": [
+            "2026-06-01",
+            "2026-06-02",
+            "2026-06-03",
+            "2026-06-04",
+            "2026-06-05",
+            "2026-06-06",
+        ],
         "sku_id": ["SKU_001", "SKU_001", "SKU_002", "SKU_002", "SKU_003", "SKU_003"],
-        "product_name": ["Bananas", "Bananas", "Spinach", "Spinach", "Tomatoes", "Tomatoes"],
+        "product_name": [
+            "Bananas",
+            "Bananas",
+            "Spinach",
+            "Spinach",
+            "Tomatoes",
+            "Tomatoes",
+        ],
         "category": ["Fruit", "Fruit", "Leafy Greens", None, "Vegetables", "Vegetables"],
         "unit_price": [1.99, np.nan, 3.49, 3.50, np.nan, 2.29],
         "inventory_level": [100, 90, np.nan, 80, 75, 70],
         "promotion": ["No", "Yes", "No", None, "Yes", "No"],
         "is_weekend": [0, 0, 0, 0, 1, 1],
-        "units_sold": [50, 60, 30, 35, 45, 40]
+        "units_sold": [50, 60, 30, 35, 45, 40],
     }
     return pd.DataFrame(data)
 
 
 def test_split_proportions(sample_raw_dataframe):
     """Test that split_data produces the expected partitions and preserves record count."""
-    train, val, test = split_data(sample_raw_dataframe, train_ratio=0.5, val_ratio=0.25, test_ratio=0.25)
-    
+    train, val, test = split_data(
+        sample_raw_dataframe, train_ratio=0.5, val_ratio=0.25, test_ratio=0.25
+    )
+
     total_rows = len(sample_raw_dataframe)
     assert len(train) + len(val) + len(test) == total_rows
     assert len(train) == 3
@@ -57,8 +71,10 @@ def test_split_proportions(sample_raw_dataframe):
 
 def test_imputation_removes_all_missing_values(sample_raw_dataframe):
     """Test that compute_and_apply_imputation eliminates all NaN values in target columns."""
-    train, val, test = split_data(sample_raw_dataframe, train_ratio=0.5, val_ratio=0.25, test_ratio=0.25)
-    
+    train, val, test = split_data(
+        sample_raw_dataframe, train_ratio=0.5, val_ratio=0.25, test_ratio=0.25
+    )
+
     numeric_cols = ["unit_price", "inventory_level"]
     cat_cols = ["category", "promotion"]
 
@@ -81,15 +97,15 @@ def test_no_data_leakage_in_imputation():
     Test that test set missing values are imputed using TRAIN set median,
     NOT the test set median or global median.
     """
-    train_data = pd.DataFrame({
-        "unit_price": [10.0, 10.0, 10.0, 10.0, 10.0]  # Train median is exactly 10.0
-    })
-    val_data = pd.DataFrame({
-        "unit_price": [100.0, np.nan]  # Val missing should receive 10.0 (from train)
-    })
-    test_data = pd.DataFrame({
-        "unit_price": [500.0, 500.0, np.nan]  # Test missing should receive 10.0 (from train)
-    })
+    train_data = pd.DataFrame(
+        {"unit_price": [10.0, 10.0, 10.0, 10.0, 10.0]}  # Train median is exactly 10.0
+    )
+    val_data = pd.DataFrame(
+        {"unit_price": [100.0, np.nan]}  # Val missing should receive 10.0 (from train)
+    )
+    test_data = pd.DataFrame(
+        {"unit_price": [500.0, 500.0, np.nan]}  # Test missing should receive 10.0 (from train)
+    )
 
     train_imp, val_imp, test_imp, stats = compute_and_apply_imputation(
         train_data, val_data, test_data, ["unit_price"], []
@@ -104,11 +120,15 @@ def test_no_data_leakage_in_imputation():
 
 def test_sklearn_pipeline_chaining():
     """Test that sklearn.pipeline.Pipeline chains imputer and encoder correctly."""
-    df = pd.DataFrame({
-        "category": ["Fruit", "Vegetables", None],
-        "unit_price": [1.99, np.nan, 4.99]
-    })
-    pipeline = build_pipeline(numeric_cols=["unit_price"], categorical_cols=["category"])
+    df = pd.DataFrame(
+        {
+            "category": ["Fruit", "Vegetables", None],
+            "unit_price": [1.99, np.nan, 4.99],
+        }
+    )
+    pipeline = build_pipeline(
+        numeric_cols=["unit_price"], categorical_cols=["category"]
+    )
     transformed = pipeline.fit_transform(df)
 
     # Missing unit price and category should be imputed
@@ -125,16 +145,13 @@ def test_end_to_end_pipeline(tmp_path):
 
     # Generate synthetic raw data
     generate_greenleaf_sales_data(
-        start_date="2026-06-01",
-        end_date="2026-06-15",
-        output_path=raw_path
+        start_date="2026-06-01", end_date="2026-06-15", output_path=raw_path
     )
     assert os.path.exists(raw_path)
 
     # Run preprocessing
     train_df, val_df, test_df = run_pipeline(
-        raw_csv_path=raw_path,
-        output_dir=out_dir
+        raw_csv_path=raw_path, output_dir=out_dir
     )
 
     # Check files exist

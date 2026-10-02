@@ -1,13 +1,13 @@
 # Perishable Goods Demand Forecast for GreenLeaf Grocery
 
 ![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue?logo=python)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-Pipeline-orange?logo=scikitlearn)
-![pytest](https://img.shields.io/badge/pytest-5%20passed-brightgreen?logo=pytest)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Pipeline%20%26%20LinearRegression-orange?logo=scikitlearn)
+![pytest](https://img.shields.io/badge/pytest-8%20passed-brightgreen?logo=pytest)
+![Code Style](https://img.shields.io/badge/code%20style-black%20%26%20flake8-000000.svg)
 ![Data Versioning](https://img.shields.io/badge/Data%20Versioning-.gitignore%20Protected-success)
-![Task](https://img.shields.io/badge/Ezitech%20Internship-Task%201%20Complete-green)
+![Tasks](https://img.shields.io/badge/Ezitech%20Internship-Task%201%20%26%202%20Complete-green)
 
 **Client:** GreenLeaf Grocery – Neighborhood Organic Market  
-**Project Task 1:** Build data cleaning and preprocessing pipeline  
 **Intern:** Mushtaq Ahmad  
 **Repository:** [https://github.com/Mushtaq0054/greenleaf-demand-forecasting](https://github.com/Mushtaq0054/greenleaf-demand-forecasting)
 
@@ -15,20 +15,15 @@
 
 ## 1. Project Overview & Business Context
 
-GreenLeaf Grocery is an organic neighborhood market that stocks fresh, perishable produce. Because perishable goods spoil quickly, having an inaccurate demand forecast leads directly to food waste and lost revenue.
+GreenLeaf Grocery is an organic neighborhood market stocking fresh, perishable produce. Because fresh produce spoils quickly, inaccurate demand forecasting causes excessive inventory waste and lost revenue.
 
-This repository implements **Task 1: Data Cleaning and Preprocessing Pipeline**, providing an automated, reproducible, and leak-free machine learning preprocessing pipeline:
-1. **Raw Data Generation & Loading:** Manages 3 months of daily perishable sales records (`data/raw/sales_data.csv`).
-2. **Leak-Free Imputation:** Automatically fits numerical medians and categorical modes strictly on the **training set (70%)** and applies them to **validation (15%)** and **test (15%)** splits without future data leakage.
-3. **Categorical Encoding:** One-hot encodes categorical produce categories and discount promotions.
-4. **Scikit-Learn Pipeline Chaining:** Combines custom estimators (`BaseEstimator`, `TransformerMixin`) into an `sklearn.pipeline.Pipeline`.
-5. **Auditing & Logging:** Employs Python's standard `logging` library for traceable execution.
-6. **Data Versioning & Security:** Keeps large CSV artifacts protected via `.gitignore` while maintaining repository folder structure with `.gitkeep`.
-7. **Automated Testing:** 100% test coverage on data splits, imputation, and pipeline execution using `pytest`.
+This repository implements the end-to-end forecasting pipeline:
+- **Task 1: Data Cleaning & Preprocessing Pipeline** (Reproducible scikit-learn pipeline, leak-free imputation, train/val/test splits, versioned CSV artifacts).
+- **Task 2: Develop Baseline Forecasting Model & Report** (Linear Regression baseline, StandardScaler numeric scaling, validation evaluation with MAE/RMSE, visualization, serialized joblib model, and evaluation report).
 
 ---
 
-## 2. Preprocessing Architecture Flow
+## 2. Project Architecture
 
 ```text
 [ Raw CSV: data/raw/sales_data.csv ]
@@ -39,21 +34,24 @@ This repository implements **Task 1: Data Cleaning and Preprocessing Pipeline**,
       ▼            ▼            ▼
 Train (70%)    Val (15%)    Test (15%)
  (772 rows)   (166 rows)   (166 rows)
-      │
-      ▼
-[ Fit LeakFreeImputer ] ──( Learned Statistics )──┐
-      │                                           │
-      ▼                                           ▼
-[ Transform Train ]                      [ Transform Val & Test ]
-      │                                           │
-      └────────────────────┬──────────────────────┘
-                           ▼
-          [ Verify 0 Remaining Nulls ]
-                           ▼
-          [ Save Processed Clean CSVs ]
-          ├── data/processed/train.csv
-          ├── data/processed/val.csv
-          └── data/processed/test.csv
+      │            │            │
+      ▼            ▼            ▼
+[ LeakFreeImputer & OneHotEncoder ]
+      │            │            │
+      ▼            ▼            ▼
+  train.csv     val.csv      test.csv
+      │            │
+      ▼            │
+[ BaselineDemandForecaster ]
+(StandardScaler + LinearRegression)
+      │            │
+      ├────────────┼──────────► [ Validation Evaluation ]
+      │            │            ├── MAE : 5.05 units
+      │            │            └── RMSE: 6.95 units
+      ▼            │
+[ baseline_model.joblib ]       [ Visualization & Report ]
+                                ├── reports/figures/predicted_vs_actual.png
+                                └── baseline_report.md
 ```
 
 ---
@@ -71,13 +69,20 @@ greenleaf-demand-forecasting/
 │       ├── train.csv                # 70% cleaned training set (ignored in git)
 │       ├── val.csv                  # 15% cleaned validation set (ignored in git)
 │       └── test.csv                 # 15% cleaned test set (ignored in git)
+├── reports/
+│   └── figures/
+│       └── predicted_vs_actual.png  # Task 2 actual vs predicted demand visualization
 ├── tests/
-│   └── test_preprocessing.py        # Pytest unit & integration test suite (5 tests)
+│   ├── test_preprocessing.py        # Task 1 unit tests (5 passed)
+│   └── test_baseline.py             # Task 2 unit tests (3 passed)
+├── baseline_model.joblib            # Serialized trained baseline model artifact
+├── baseline_report.md               # Task 2 formal evaluation report
 ├── generate_data.py                 # Realistic raw data generator for GreenLeaf Grocery
 ├── preprocess.py                    # Scikit-learn Pipeline with leak-free imputer & logging
-├── requirements.txt                 # Project dependencies (pandas, scikit-learn, pytest)
+├── train_baseline.py                # Task 2 baseline training, evaluation & report script
+├── requirements.txt                 # Project dependencies
 ├── .gitignore                       # Protection rules for data files and environments
-└── README.md                        # Documentation, regeneration guide & submission notes
+└── README.md                        # Project documentation & regeneration guide
 ```
 
 ---
@@ -89,14 +94,14 @@ The dataset reflects 92 days (June 1, 2026 to August 31, 2026) across 12 perisha
 | Column Name | Data Type | Description | Imputation Strategy |
 |---|---|---|---|
 | `date` | String (YYYY-MM-DD) | Transaction date | Chronological ordering |
-| `sku_id` | String | Unique product identifier (e.g., `SKU_001`) | None (Identifier) |
-| `product_name` | String | Name of organic produce | None |
+| `sku_id` | String | Unique product identifier (e.g., `SKU_001`) | Categorical encoding |
+| `product_name` | String | Name of organic produce | Categorical feature |
 | `category` | String | Produce department (`Fruit`, `Vegetables`, `Berries`, `Leafy Greens`) | Mode (Most Frequent) |
-| `unit_price` | Float | Price per item in USD (~4% deliberate missing values) | Training Median |
-| `inventory_level` | Integer | Stock on hand (~3% deliberate missing values) | Training Median |
+| `unit_price` | Float | Price per item in USD (~4% deliberate missing values) | Training Median (Scaled) |
+| `inventory_level` | Integer | Stock on hand (~3% deliberate missing values) | Training Median (Scaled) |
 | `promotion` | String (`Yes`/`No`) | Active discount flag (~3% deliberate missing values) | Mode (Most Frequent) |
 | `is_weekend` | Integer (0 or 1) | Weekend indicator | Calendar context |
-| `units_sold` | Integer | **Target demand variable** (daily sales quantity) | None (Target) |
+| `units_sold` | Integer | **Target demand variable** (daily sales quantity) | Target Variable |
 
 ---
 
@@ -126,60 +131,65 @@ pip install -r requirements.txt
 
 ---
 
-## 6. How to Regenerate Cleaned Data
+## 6. Execution & Regeneration Guide
 
-### Step 1: Generate the raw sales dataset
-If `data/raw/sales_data.csv` is not present, generate it using:
+### Task 1: Generate Data & Run Preprocessing Pipeline
 ```bash
 python generate_data.py
-```
-*Result:* Creates `data/raw/sales_data.csv` (1,104 rows across 9 columns).
-
-### Step 2: Run the preprocessing pipeline
-```bash
 python preprocess.py
 ```
+*Result:* Creates `data/raw/sales_data.csv` and produces cleaned splits `train.csv`, `val.csv`, and `test.csv` in `data/processed/`.
+
+### Task 2: Train Baseline Model & Generate Evaluation Report
+```bash
+python train_baseline.py
+```
 *Result:*
-- Reads `data/raw/sales_data.csv`.
-- Splits data chronologically into Train (772 rows), Validation (166 rows), and Test (166 rows).
-- Fits `LeakFreeImputer` exclusively on the training split to learn median prices and inventory levels.
-- Imputes missing values across all three splits with zero data leakage.
-- Saves the clean, ready-to-train datasets into:
-  - `data/processed/train.csv`
-  - `data/processed/val.csv`
-  - `data/processed/test.csv`
+- Standardizes numeric features and one-hot encodes categoricals.
+- Trains `LinearRegression` model on the 70% training split.
+- Saves serialized model artifact: `baseline_model.joblib`.
+- Evaluates on the 15% validation split:
+  - **Validation MAE:** `5.05 units`
+  - **Validation RMSE:** `6.95 units`
+- Generates comparison plot: `reports/figures/predicted_vs_actual.png`.
+- Writes formal evaluation report: `baseline_report.md`.
 
 ---
 
-## 7. Running Automated Tests
+## 7. Automated Testing & Code Quality
 
-Run the test suite using `pytest`:
+### Running the Test Suite (pytest)
 ```bash
 pytest tests/ -v
 ```
 
-### Test Suite Summary:
-| Test Case | Description | Status |
-|---|---|:---:|
-| `test_split_proportions` | Verifies data partitioning preserves 70/15/15 ratio and total rows | **PASSED** |
-| `test_imputation_removes_all_missing_values` | Ensures 0 null values remain across numeric and categorical columns | **PASSED** |
-| `test_no_data_leakage_in_imputation` | Validates that test set missing values use train median, avoiding leakage | **PASSED** |
-| `test_sklearn_pipeline_chaining` | Confirms `sklearn.pipeline.Pipeline` chains transformations seamlessly | **PASSED** |
-| `test_end_to_end_pipeline` | Full integration test creating temporary artifacts and checking files | **PASSED** |
-
+### Test Results Summary (8/8 Passed):
 ```text
-============================== 5 passed in 3.98s ==============================
+tests/test_baseline.py::test_forecaster_fit_and_predict_shape PASSED     [ 12%]
+tests/test_baseline.py::test_saved_model_can_be_loaded PASSED            [ 25%]
+tests/test_baseline.py::test_end_to_end_training_and_artifacts PASSED    [ 37%]
+tests/test_preprocessing.py::test_split_proportions PASSED               [ 50%]
+tests/test_preprocessing.py::test_imputation_removes_all_missing_values PASSED [ 62%]
+tests/test_preprocessing.py::test_no_data_leakage_in_imputation PASSED   [ 75%]
+tests/test_preprocessing.py::test_sklearn_pipeline_chaining PASSED       [ 87%]
+tests/test_preprocessing.py::test_end_to_end_pipeline PASSED             [100%]
+
+============================== 8 passed in 2.29s ==============================
+```
+
+### Code Formatting & Linting
+All code is strictly formatted with `black` and passes `flake8` with 0 warnings:
+```bash
+black .
+flake8 --max-line-length=120 --exclude=.venv,__pycache__
 ```
 
 ---
 
-## 8. Mentor & Supervisor Submission Note
+## 8. Mentor & Supervisor Submission Notes
 
-> **What I Did and Why:**
-> 
-> In accordance with the GreenLeaf Grocery project brief and mentor instructions:
-> 1. **Realistic Data Formulation:** As transaction streams were not directly attached, I developed `generate_data.py` to create a 3-month daily sales dataset (1,104 records across 12 organic produce SKUs) with controlled missing values to rigorously evaluate preprocessing.
-> 2. **Leak-Free Imputation:** To guarantee strict separation between training and evaluation splits, imputation statistics (median for numeric features, mode for categoricals) are learned exclusively on the 70% training split and applied to the 15% validation and 15% test splits.
-> 3. **Scikit-Learn Pipeline (`preprocess.py`):** Encapsulated the transformation workflow using custom `BaseEstimator` / `TransformerMixin` components integrated into `sklearn.pipeline.Pipeline`, coupled with Python `logging` for runtime tracking.
-> 4. **Automated Verification:** Authored unit and integration tests with `pytest` (`tests/test_preprocessing.py`), verifying split logic, leakage prevention, and end-to-end execution (5/5 tests passing).
-> 5. **Clean Versioning:** Applied industry-standard `.gitignore` protection for data artifacts while retaining folder structure with `.gitkeep`.
+### Task 1 Note:
+> "Implemented reproducible data cleaning pipeline with custom leak-free imputer in `preprocess.py`, zero null values in processed splits, protected data via `.gitignore`, and passing unit tests."
+
+### Task 2 Note:
+> "Trained Multiple Linear Regression baseline model with standardized numerical features (`StandardScaler`) and one-hot encoded categories. Serialized model to `baseline_model.joblib`. Achieved validation MAE of 5.05 units and RMSE of 6.95 units. Authored formal evaluation report in `baseline_report.md` with comparison plot in `reports/figures/predicted_vs_actual.png`. All 8 pytest test cases pass and code is formatted with black and passes flake8."
