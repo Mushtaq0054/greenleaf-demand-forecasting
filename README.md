@@ -1,11 +1,12 @@
 # Perishable Goods Demand Forecast for GreenLeaf Grocery
 
 ![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue?logo=python)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-Pipeline%20%26%20LinearRegression-orange?logo=scikitlearn)
-![pytest](https://img.shields.io/badge/pytest-8%20passed-brightgreen?logo=pytest)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Gradient%20Boosting%20%26%20Pipelines-orange?logo=scikitlearn)
+![pytest](https://img.shields.io/badge/pytest-11%20passed-brightgreen?logo=pytest)
+![Performance](https://img.shields.io/badge/Inference%20Latency-%3C%203ms%20(SLA%20%3C%20100ms)-blue)
 ![Code Style](https://img.shields.io/badge/code%20style-black%20%26%20flake8-000000.svg)
 ![Data Versioning](https://img.shields.io/badge/Data%20Versioning-.gitignore%20Protected-success)
-![Tasks](https://img.shields.io/badge/Ezitech%20Internship-Task%201%20%26%202%20Complete-green)
+![Tasks](https://img.shields.io/badge/Ezitech%20Internship-Tasks%201%2C%202%20%26%203%20Complete-green)
 
 **Client:** GreenLeaf Grocery – Neighborhood Organic Market  
 **Intern:** Mushtaq Ahmad  
@@ -20,6 +21,7 @@ GreenLeaf Grocery is an organic neighborhood market stocking fresh, perishable p
 This repository implements the end-to-end forecasting pipeline:
 - **Task 1: Data Cleaning & Preprocessing Pipeline** (Reproducible scikit-learn pipeline, leak-free imputation, train/val/test splits, versioned CSV artifacts).
 - **Task 2: Develop Baseline Forecasting Model & Report** (Linear Regression baseline, StandardScaler numeric scaling, validation evaluation with MAE/RMSE, visualization, serialized joblib model, and evaluation report).
+- **Task 3: Feature Engineering, Model Tuning & Automated Testing** (Calendar/lag/rolling feature engineering, tuned GradientBoostingRegressor with RandomizedSearchCV, achieving **14.82% lower MAE** than baseline, latency benchmark $<100\text{ ms}$, comprehensive `TEST_PLAN.md`, and 11-test automated suite).
 
 ---
 
@@ -41,22 +43,40 @@ Train (70%)    Val (15%)    Test (15%)
       ▼            ▼            ▼
   train.csv     val.csv      test.csv
       │            │
-      ▼            │
-[ BaselineDemandForecaster ]
-(StandardScaler + LinearRegression)
-      │            │
-      ├────────────┼──────────► [ Validation Evaluation ]
-      │            │            ├── MAE : 5.05 units
-      │            │            └── RMSE: 6.95 units
-      ▼            │
-[ baseline_model.joblib ]       [ Visualization & Report ]
-                                ├── reports/figures/predicted_vs_actual.png
-                                └── baseline_report.md
+      ├────────────┼───────────────────────────┐
+      │            │                           │
+      ▼            │                           ▼
+[ Baseline Model ] │                 [ Feature Engineering (features.py) ]
+(LinearRegression) │                 ├── Calendar features (day, month, holiday)
+      │            │                 ├── Lag features (t-1, t-2, t-7)
+      ▼            │                 └── Rolling 7-day mean demand
+baseline_model.joblib                          │
+                   │                           ▼
+                   │                 [ Hyperparameter Search ]
+                   │                 (RandomizedSearchCV + GradientBoosting)
+                   │                           │
+                   ▼                           ▼
+       [ Model Comparison ]          [ final_model.joblib ]
+       ├── Baseline MAE : 4.0300               │
+       ├── Tuned MAE    : 3.4329 ◄─────────────┘
+       ├── Improvement  : 14.82% (Target >= 10%)
+       └── Latency SLA  : ~2.4 ms (Target < 100 ms)
 ```
 
 ---
 
-## 3. Repository File Structure
+## 3. Model Performance Comparison (Task 2 vs. Task 3)
+
+| Metric | Task 2 Baseline (Linear Regression) | Task 3 Final Model (GradientBoosting) | Improvement | Target Requirement |
+|---|---|---|---|---|
+| **Validation MAE** | `4.0300 units` | **`3.4329 units`** | **14.82% reduction** | $\ge 10.0\%$ reduction |
+| **Validation RMSE** | `5.3254 units` | **`4.9158 units`** | **7.69% reduction** | Lower is better |
+| **Cross-Validation MAE** | N/A | `3.8233 units` | Robust generalization | CV stability |
+| **Inference Latency** | $< 1\text{ ms}$ | **$\approx 2.4\text{ ms}$** | Ultra-responsive | $< 100\text{ ms}$ SLA |
+
+---
+
+## 4. Repository File Structure
 
 ```text
 greenleaf-demand-forecasting/
@@ -74,12 +94,17 @@ greenleaf-demand-forecasting/
 │       └── predicted_vs_actual.png  # Task 2 actual vs predicted demand visualization
 ├── tests/
 │   ├── test_preprocessing.py        # Task 1 unit tests (5 passed)
-│   └── test_baseline.py             # Task 2 unit tests (3 passed)
+│   ├── test_baseline.py             # Task 2 unit tests (3 passed)
+│   └── test_final_model.py          # Task 3 unit & benchmark tests (3 passed)
 ├── baseline_model.joblib            # Serialized trained baseline model artifact
+├── final_model.joblib               # Serialized trained final tuned model artifact
 ├── baseline_report.md               # Task 2 formal evaluation report
+├── TEST_PLAN.md                     # Task 3 comprehensive test plan & verification matrix
 ├── generate_data.py                 # Realistic raw data generator for GreenLeaf Grocery
 ├── preprocess.py                    # Scikit-learn Pipeline with leak-free imputer & logging
-├── train_baseline.py                # Task 2 baseline training, evaluation & report script
+├── features.py                      # Task 3 feature engineering module (time, lag, rolling)
+├── train_baseline.py                # Task 2 baseline training & evaluation script
+├── train_model.py                   # Task 3 hyperparameter search & final model training
 ├── requirements.txt                 # Project dependencies
 ├── .gitignore                       # Protection rules for data files and environments
 └── README.md                        # Project documentation & regeneration guide
@@ -87,7 +112,7 @@ greenleaf-demand-forecasting/
 
 ---
 
-## 4. Dataset Schema
+## 5. Dataset Schema
 
 The dataset reflects 92 days (June 1, 2026 to August 31, 2026) across 12 perishable organic produce SKUs:
 
@@ -105,7 +130,7 @@ The dataset reflects 92 days (June 1, 2026 to August 31, 2026) across 12 perisha
 
 ---
 
-## 5. Quickstart & Installation
+## 6. Quickstart & Installation
 
 ### Step 1: Clone the repository
 ```bash
@@ -131,7 +156,7 @@ pip install -r requirements.txt
 
 ---
 
-## 6. Execution & Regeneration Guide
+## 7. Execution & Regeneration Guide
 
 ### Task 1: Generate Data & Run Preprocessing Pipeline
 ```bash
@@ -144,52 +169,62 @@ python preprocess.py
 ```bash
 python train_baseline.py
 ```
+*Result:* Trains Linear Regression baseline, produces `baseline_model.joblib`, validation MAE `4.0300`, and `baseline_report.md`.
+
+### Task 3: Run Feature Engineering, Hyperparameter Tuning & Final Model Training
+```bash
+python train_model.py
+```
 *Result:*
-- Standardizes numeric features and one-hot encodes categoricals.
-- Trains `LinearRegression` model on the 70% training split.
-- Saves serialized model artifact: `baseline_model.joblib`.
-- Evaluates on the 15% validation split:
-  - **Validation MAE:** `5.05 units`
-  - **Validation RMSE:** `6.95 units`
-- Generates comparison plot: `reports/figures/predicted_vs_actual.png`.
-- Writes formal evaluation report: `baseline_report.md`.
+- Extracts calendar, lag (`[1, 2, 7]`), and rolling 7-day features from `features.py`.
+- Tunes `GradientBoostingRegressor` via `RandomizedSearchCV` (5-fold TimeSeries cross-validation).
+- Achieves validation **MAE: 3.4329 units** (**14.82% improvement** over baseline).
+- Serializes `final_model.joblib`.
 
 ---
 
-## 7. Automated Testing & Code Quality
+## 8. Automated Testing & Code Quality
 
-### Running the Test Suite (pytest)
+### Running the Complete Test Suite (pytest)
 ```bash
 pytest tests/ -v
 ```
 
-### Test Results Summary (8/8 Passed):
+### Test Results Summary (11/11 Passed):
 ```text
-tests/test_baseline.py::test_forecaster_fit_and_predict_shape PASSED     [ 12%]
-tests/test_baseline.py::test_saved_model_can_be_loaded PASSED            [ 25%]
-tests/test_baseline.py::test_end_to_end_training_and_artifacts PASSED    [ 37%]
-tests/test_preprocessing.py::test_split_proportions PASSED               [ 50%]
-tests/test_preprocessing.py::test_imputation_removes_all_missing_values PASSED [ 62%]
-tests/test_preprocessing.py::test_no_data_leakage_in_imputation PASSED   [ 75%]
-tests/test_preprocessing.py::test_sklearn_pipeline_chaining PASSED       [ 87%]
+tests/test_baseline.py::test_forecaster_fit_and_predict_shape PASSED     [  9%]
+tests/test_baseline.py::test_saved_model_can_be_loaded PASSED            [ 18%]
+tests/test_baseline.py::test_end_to_end_training_and_artifacts PASSED    [ 27%]
+tests/test_final_model.py::test_data_pipeline_feature_engineering PASSED [ 36%]
+tests/test_final_model.py::test_model_inference_shape_and_validity PASSED [ 45%]
+tests/test_final_model.py::test_inference_latency_performance PASSED     [ 54%]
+tests/test_preprocessing.py::test_split_proportions PASSED               [ 63%]
+tests/test_preprocessing.py::test_imputation_removes_all_missing_values PASSED [ 72%]
+tests/test_preprocessing.py::test_no_data_leakage_in_imputation PASSED   [ 81%]
+tests/test_preprocessing.py::test_sklearn_pipeline_chaining PASSED       [ 90%]
 tests/test_preprocessing.py::test_end_to_end_pipeline PASSED             [100%]
 
-============================== 8 passed in 2.29s ==============================
+============================= 11 passed in 4.36s ==============================
 ```
 
+For test specifications, boundary conditions, and latency criteria, refer to [`TEST_PLAN.md`](TEST_PLAN.md).
+
 ### Code Formatting & Linting
-All code is strictly formatted with `black` and passes `flake8` with 0 warnings:
+All code strictly conforms to PEP 8 standards with `black` and passes `flake8` with 0 warnings:
 ```bash
-black .
+black --check . --exclude "/\.venv/"
 flake8 --max-line-length=120 --exclude=.venv,__pycache__
 ```
 
 ---
 
-## 8. Mentor & Supervisor Submission Notes
+## 9. Mentor & Supervisor Submission Notes
 
 ### Task 1 Note:
 > "Implemented reproducible data cleaning pipeline with custom leak-free imputer in `preprocess.py`, zero null values in processed splits, protected data via `.gitignore`, and passing unit tests."
 
 ### Task 2 Note:
-> "Trained Multiple Linear Regression baseline model with standardized numerical features (`StandardScaler`) and one-hot encoded categories. Serialized model to `baseline_model.joblib`. Achieved validation MAE of 5.05 units and RMSE of 6.95 units. Authored formal evaluation report in `baseline_report.md` with comparison plot in `reports/figures/predicted_vs_actual.png`. All 8 pytest test cases pass and code is formatted with black and passes flake8."
+> "Trained Multiple Linear Regression baseline model with standardized numerical features (`StandardScaler`) and one-hot encoded categories. Serialized model to `baseline_model.joblib`. Achieved validation MAE of 4.0300 units and RMSE of 5.3254 units. Authored formal evaluation report in `baseline_report.md` with comparison plot in `reports/figures/predicted_vs_actual.png`. All 8 pytest test cases pass and code is formatted with black and passes flake8."
+
+### Task 3 Note:
+> "Engineered temporal, lag (1, 2, 7 days), and 7-day rolling features in modular `features.py`. Tuned GradientBoostingRegressor in `train_model.py` using RandomizedSearchCV. The tuned final model achieved validation MAE of 3.4329 units (14.82% lower error than baseline, surpassing the >=10% requirement) and is serialized in `final_model.joblib`. Implemented 11-test automated pytest suite covering data pipelines, model inference, and latency performance (< 3 ms, meeting the < 100 ms SLA). Documented formal test plan in `TEST_PLAN.md`. Code passes black formatting and flake8 with 0 warnings."

@@ -34,8 +34,8 @@ The baseline model was evaluated on the unseen validation dataset:
 
 | Metric | Value | Interpretation |
 |---|:---:|---|
-| **Mean Absolute Error (MAE)** | **5.05 units** | Average deviation from actual demand. |
-| **Root Mean Squared Error (RMSE)** | **6.95 units** | Penalizes larger forecasting errors. |
+| **Mean Absolute Error (MAE)** | **4.03 units** | Average deviation from actual demand. |
+| **Root Mean Squared Error (RMSE)** | **5.33 units** | Penalizes larger forecasting errors. |
 
 ---
 

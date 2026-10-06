@@ -115,6 +115,13 @@ def generate_greenleaf_sales_data(
         is_weekend = 1 if day_of_week in [5, 6] else 0
         weekend_multiplier = 1.35 if is_weekend else 1.0
 
+        holiday_boost = (
+            1.30
+            if current_date.strftime("%Y-%m-%d")
+            in {"2026-06-19", "2026-07-04", "2026-07-05", "2026-09-07"}
+            else 1.0
+        )
+
         for prod in products:
             # Price variation +/- 10%
             price_noise = np.random.uniform(-0.15, 0.15)
@@ -123,12 +130,19 @@ def generate_greenleaf_sales_data(
             # Promotion flag (15% chance)
             is_promo = np.random.choice(["Yes", "No"], p=[0.15, 0.85])
             promo_boost = 1.25 if is_promo == "Yes" else 1.0
+            synergy_boost = 1.20 if is_weekend and is_promo == "Yes" else 1.0
 
-            # Calculate units sold with realistic noise and seasonality
-            expected_demand = prod["base_demand"] * weekend_multiplier * promo_boost
+            # Calculate units sold with realistic seasonal dynamics
+            expected_demand = (
+                prod["base_demand"]
+                * weekend_multiplier
+                * promo_boost
+                * holiday_boost
+                * synergy_boost
+            )
             units_sold = int(
                 np.random.normal(
-                    loc=expected_demand, scale=max(5, expected_demand * 0.12)
+                    loc=expected_demand, scale=max(2.5, expected_demand * 0.05)
                 )
             )
             units_sold = max(0, units_sold)

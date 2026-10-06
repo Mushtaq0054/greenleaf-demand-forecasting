@@ -13,6 +13,7 @@ env/
 *.joblib
 *.pkl
 !baseline_model.joblib
+!final_model.joblib
 
 # Data protection (per project requirements: data folder protected via .gitignore)
 data/raw/*.csv

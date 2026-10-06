@@ -46,7 +46,14 @@ def sample_raw_dataframe():
             "Tomatoes",
             "Tomatoes",
         ],
-        "category": ["Fruit", "Fruit", "Leafy Greens", None, "Vegetables", "Vegetables"],
+        "category": [
+            "Fruit",
+            "Fruit",
+            "Leafy Greens",
+            None,
+            "Vegetables",
+            "Vegetables",
+        ],
         "unit_price": [1.99, np.nan, 3.49, 3.50, np.nan, 2.29],
         "inventory_level": [100, 90, np.nan, 80, 75, 70],
         "promotion": ["No", "Yes", "No", None, "Yes", "No"],
@@ -79,7 +86,9 @@ def test_imputation_removes_all_missing_values(sample_raw_dataframe):
     cat_cols = ["category", "promotion"]
 
     # Verify input has missing values
-    assert train["unit_price"].isnull().sum() > 0 or test["unit_price"].isnull().sum() > 0
+    assert (
+        train["unit_price"].isnull().sum() > 0 or test["unit_price"].isnull().sum() > 0
+    )
 
     train_imp, val_imp, test_imp, stats = compute_and_apply_imputation(
         train, val, test, numeric_cols, cat_cols
@@ -87,9 +96,13 @@ def test_imputation_removes_all_missing_values(sample_raw_dataframe):
 
     # Verify no missing values in imputed splits
     for col in numeric_cols + cat_cols:
-        assert train_imp[col].isnull().sum() == 0, f"Missing values remain in train[{col}]"
+        assert (
+            train_imp[col].isnull().sum() == 0
+        ), f"Missing values remain in train[{col}]"
         assert val_imp[col].isnull().sum() == 0, f"Missing values remain in val[{col}]"
-        assert test_imp[col].isnull().sum() == 0, f"Missing values remain in test[{col}]"
+        assert (
+            test_imp[col].isnull().sum() == 0
+        ), f"Missing values remain in test[{col}]"
 
 
 def test_no_data_leakage_in_imputation():
@@ -104,7 +117,9 @@ def test_no_data_leakage_in_imputation():
         {"unit_price": [100.0, np.nan]}  # Val missing should receive 10.0 (from train)
     )
     test_data = pd.DataFrame(
-        {"unit_price": [500.0, 500.0, np.nan]}  # Test missing should receive 10.0 (from train)
+        {
+            "unit_price": [500.0, 500.0, np.nan]
+        }  # Test missing should receive 10.0 (from train)
     )
 
     train_imp, val_imp, test_imp, stats = compute_and_apply_imputation(
@@ -150,9 +165,7 @@ def test_end_to_end_pipeline(tmp_path):
     assert os.path.exists(raw_path)
 
     # Run preprocessing
-    train_df, val_df, test_df = run_pipeline(
-        raw_csv_path=raw_path, output_dir=out_dir
-    )
+    train_df, val_df, test_df = run_pipeline(raw_csv_path=raw_path, output_dir=out_dir)
 
     # Check files exist
     assert os.path.exists(os.path.join(out_dir, "train.csv"))
