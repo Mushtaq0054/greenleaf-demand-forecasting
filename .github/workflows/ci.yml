@@ -11,6 +11,10 @@ jobs:
     name: Lint, Test, and Build Container
     runs-on: ubuntu-latest
 
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,6 +36,11 @@ jobs:
           flake8 app tests --count --select=E9,F63,F7,F82 --show-source --statistics
           # Exit-zero treats all errors as warnings. Max complexity 15, max line length 127
           flake8 app tests --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
+
+      - name: Prepare dataset splits for tests
+        run: |
+          python generate_data.py
+          python preprocess.py
 
       - name: Run automated test suite
         run: |
@@ -62,15 +71,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push to Docker Hub (Conditional)
         if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
         run: |
           docker tag greenleaf-forecast:latest ${{ secrets.DOCKERHUB_USERNAME }}/greenleaf-forecast:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/greenleaf-forecast:latest
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
