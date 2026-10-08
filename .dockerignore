@@ -1,0 +1,31 @@
+# Python byte-code
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git & IDEs
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+
+# Learning docs & non-runtime assets
+docker_learn/
+github_learn/
+reports/figures/
+
+# Raw training data (model artifact final_model.joblib is bundled in container)
+data/raw/
