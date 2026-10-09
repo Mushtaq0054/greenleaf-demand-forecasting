@@ -1,0 +1,36 @@
+name: Daily Service Latency Monitoring
+
+on:
+  schedule:
+    # Runs daily at 06:00 UTC (11:00 AM PKT)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Allows manual trigger anytime from GitHub Actions tab
+
+jobs:
+  monitor-service:
+    name: Ping Service & Log Latency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run monitoring script
+        env:
+          # Target live deployment URL (or default fallback)
+          API_URL: ${{ secrets.LIVE_API_URL || 'https://greenleaf-demand-forecasting.onrender.com' }}
+        run: |
+          python monitor.py || echo "Service ping recorded failure or cold-start; logged to report."
+
+      - name: Upload daily monitoring logs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-monitoring-logs
+          path: reports/monitoring_logs.csv
+          if-no-files-found: ignore
