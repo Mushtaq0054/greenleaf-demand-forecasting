@@ -4,55 +4,103 @@
  * Handles SKU auto-filling, API interaction, validation, and inventory recommendations.
  */
 
-// 1. Organic Produce Catalogue & Presets
+// 1. Full 12-Item Organic Produce Catalogue (Matching ML Model Training Data)
 const PRODUCE_CATALOGUE = {
   SKU_001: {
     id: "SKU_001",
-    name: "Organic Honeycrisp Apples",
+    name: "Organic Bananas",
     category: "Fruit",
-    defaultPrice: 2.99,
+    defaultPrice: 1.99,
     defaultStock: 85,
-    icon: "🍎"
+    icon: "🍌"
   },
   SKU_002: {
     id: "SKU_002",
-    name: "Organic Baby Spinach",
+    name: "Baby Spinach",
     category: "Leafy Greens",
     defaultPrice: 3.49,
-    defaultStock: 50,
+    defaultStock: 45,
     icon: "🥬"
   },
   SKU_003: {
     id: "SKU_003",
-    name: "Organic Fair-Trade Bananas",
-    category: "Fruit",
-    defaultPrice: 1.89,
-    defaultStock: 120,
-    icon: "🍌"
+    name: "Roma Tomatoes",
+    category: "Vegetables",
+    defaultPrice: 2.29,
+    defaultStock: 60,
+    icon: "🍅"
   },
   SKU_004: {
     id: "SKU_004",
-    name: "Fresh Organic Strawberries",
-    category: "Berries",
-    defaultPrice: 4.29,
-    defaultStock: 45,
-    icon: "🍓"
+    name: "Hass Avocados",
+    category: "Fruit",
+    defaultPrice: 4.99,
+    defaultStock: 50,
+    icon: "🥑"
   },
   SKU_005: {
     id: "SKU_005",
-    name: "Crisp Organic Cucumbers",
-    category: "Vegetables",
-    defaultPrice: 1.99,
-    defaultStock: 65,
-    icon: "🥒"
+    name: "Organic Gala Apples",
+    category: "Fruit",
+    defaultPrice: 3.99,
+    defaultStock: 75,
+    icon: "🍎"
   },
   SKU_006: {
     id: "SKU_006",
-    name: "Organic Hass Avocados",
-    category: "Fruit",
-    defaultPrice: 2.49,
-    defaultStock: 90,
-    icon: "🥑"
+    name: "Fresh Strawberries",
+    category: "Berries",
+    defaultPrice: 4.49,
+    defaultStock: 40,
+    icon: "🍓"
+  },
+  SKU_007: {
+    id: "SKU_007",
+    name: "Organic Broccoli",
+    category: "Vegetables",
+    defaultPrice: 2.89,
+    defaultStock: 35,
+    icon: "🥦"
+  },
+  SKU_008: {
+    id: "SKU_008",
+    name: "Red Bell Peppers",
+    category: "Vegetables",
+    defaultPrice: 3.19,
+    defaultStock: 30,
+    icon: "🫑"
+  },
+  SKU_009: {
+    id: "SKU_009",
+    name: "English Cucumbers",
+    category: "Vegetables",
+    defaultPrice: 1.79,
+    defaultStock: 40,
+    icon: "🥒"
+  },
+  SKU_010: {
+    id: "SKU_010",
+    name: "Organic Carrots",
+    category: "Vegetables",
+    defaultPrice: 2.19,
+    defaultStock: 50,
+    icon: "🥕"
+  },
+  SKU_011: {
+    id: "SKU_011",
+    name: "Fresh Blueberries",
+    category: "Berries",
+    defaultPrice: 4.99,
+    defaultStock: 30,
+    icon: "🫐"
+  },
+  SKU_012: {
+    id: "SKU_012",
+    name: "Organic Tuscan Kale",
+    category: "Leafy Greens",
+    defaultPrice: 2.99,
+    defaultStock: 25,
+    icon: "🥗"
   }
 };
 
