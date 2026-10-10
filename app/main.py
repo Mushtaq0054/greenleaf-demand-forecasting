@@ -16,8 +16,9 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 
-from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import pandas as pd
 
 # Ensure root directory is on sys.path
@@ -35,6 +36,8 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger("GreenLeafAPI")
+
+FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
 
 
 @asynccontextmanager
@@ -69,15 +72,30 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Mount frontend static directories for dedicated dashboard routes
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/dashboard", StaticFiles(directory=FRONTEND_DIR, html=True), name="dashboard")
+    app.mount("/ui", StaticFiles(directory=FRONTEND_DIR, html=True), name="ui")
+
 
 @app.get(
     "/",
     tags=["Root"],
-    summary="Root Service Information",
-    response_description="Returns basic service metadata and documentation links",
+    summary="Root Service Information & Dashboard",
+    response_description="Returns interactive dashboard in browser or JSON metadata for API clients",
 )
-async def root() -> Dict[str, Any]:
-    """Root endpoint returning basic microservice information."""
+async def root(request: Request):
+    """
+    Root endpoint:
+    - Serves the interactive HTML dashboard when visited by a web browser.
+    - Returns JSON service metadata when queried by API clients or automated tests.
+    """
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and not accept.startswith("*/*"):
+        index_file = os.path.join(FRONTEND_DIR, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+
     return {
         "service": "GreenLeaf Grocery Demand Forecasting API",
         "version": "1.0.0",
@@ -85,7 +103,27 @@ async def root() -> Dict[str, Any]:
         "docs_url": "/docs",
         "health_url": "/health",
         "predict_url": "/predict",
+        "dashboard_url": "/dashboard",
     }
+
+
+@app.get("/style.css", include_in_schema=False)
+async def serve_root_css():
+    """Serves stylesheet for root index.html."""
+    css_path = os.path.join(FRONTEND_DIR, "style.css")
+    if os.path.exists(css_path):
+        return FileResponse(css_path, media_type="text/css")
+    raise HTTPException(status_code=404, detail="Stylesheet not found")
+
+
+@app.get("/app.js", include_in_schema=False)
+async def serve_root_js():
+    """Serves frontend JavaScript controller for root index.html."""
+    js_path = os.path.join(FRONTEND_DIR, "app.js")
+    if os.path.exists(js_path):
+        return FileResponse(js_path, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="JavaScript not found")
+
 
 
 @app.get(

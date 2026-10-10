@@ -12,6 +12,7 @@
 **Client:** GreenLeaf Grocery – Neighborhood Organic Market  
 **Intern:** Mushtaq Ahmad  
 **Repository:** [https://github.com/Mushtaq0054/greenleaf-demand-forecasting](https://github.com/Mushtaq0054/greenleaf-demand-forecasting)  
+**Live Web Dashboard:** [https://greenleaf-demand-forecasting.onrender.com/dashboard](https://greenleaf-demand-forecasting.onrender.com/dashboard) *(Interactive Grocery UI)*  
 **Live Production API:** [https://greenleaf-demand-forecasting.onrender.com](https://greenleaf-demand-forecasting.onrender.com) *(Render Web Service)*  
 **Live Interactive Docs:** [https://greenleaf-demand-forecasting.onrender.com/docs](https://greenleaf-demand-forecasting.onrender.com/docs)  
 

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenLeaf Grocery — AI Demand Forecasting Dashboard</title>
+  <meta name="description" content="Production Machine Learning Demand Forecasting System for GreenLeaf Grocery fresh perishable produce.">
+  
+  <!-- Modern Google Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Modular Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1>GreenLeaf Grocery</h1>
+          <p>AI Perishable Demand Forecaster</p>
+        </div>
+      </a>
+
+      <div class="nav-badges">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>Model Live (v1.0.0)</span>
+        </div>
+        <a href="/docs" target="_blank" class="docs-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          API Docs
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-wrapper">
+    
+    <!-- Hero Introduction -->
+    <section class="hero-banner">
+      <span class="hero-tag">Machine Learning Optimization</span>
+      <h2>Perishable Produce Demand Forecast</h2>
+      <p>Accurate daily sales predictions tuned to minimize organic food waste and prevent retail stockouts.</p>
+    </section>
+
+    <!-- Interactive Dashboard Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Forecasting Inputs -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>⚙️</span> Forecasting Parameters
+          </div>
+          <p class="card-subtitle">Choose a quick preset or customize transaction variables for tomorrow's inventory order.</p>
+        </div>
+
+        <!-- Quick Produce Preset Chips -->
+        <div class="presets-section">
+          <div class="presets-label">Popular Produce Presets</div>
+          <div class="preset-pills">
+            <button type="button" class="preset-chip active" data-sku="SKU_001">🍎 Honeycrisp Apples</button>
+            <button type="button" class="preset-chip" data-sku="SKU_002">🥬 Baby Spinach</button>
+            <button type="button" class="preset-chip" data-sku="SKU_003">🍌 Bananas</button>
+            <button type="button" class="preset-chip" data-sku="SKU_004">🍓 Strawberries</button>
+            <button type="button" class="preset-chip" data-sku="SKU_005">🥒 Cucumbers</button>
+            <button type="button" class="preset-chip" data-sku="SKU_006">🥑 Hass Avocados</button>
+          </div>
+        </div>
+
+        <!-- Parameter Input Form -->
+        <form id="forecast-form">
+          <div class="form-grid">
+            
+            <!-- SKU Selection -->
+            <div class="form-group">
+              <label for="sku_id">Produce SKU ID</label>
+              <select id="sku_id" required></select>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+              <label for="category">Produce Category</label>
+              <select id="category" required>
+                <option value="Fruit">Fruit</option>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Leafy Greens">Leafy Greens</option>
+                <option value="Berries">Berries</option>
+              </select>
+            </div>
+
+            <!-- Product Title -->
+            <div class="form-group full-width">
+              <label for="product_name">Product Description</label>
+              <input type="text" id="product_name" required>
+            </div>
+
+            <!-- Forecast Target Date -->
+            <div class="form-group">
+              <label for="forecast_date">Target Forecast Date</label>
+              <input type="date" id="forecast_date" required>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="form-group">
+              <label for="unit_price">
+                <span>Unit Retail Price ($)</span>
+                <span class="label-hint">> $0.00</span>
+              </label>
+              <input type="number" id="unit_price" step="0.01" min="0.10" max="25.00" required>
+            </div>
+
+            <!-- Stock Slider -->
+            <div class="form-group full-width">
+              <label for="inventory_level">
+                <span>Current Stock on Hand</span>
+                <span class="label-hint">Units in store storage</span>
+              </label>
+              <div class="range-container">
+                <input type="range" id="inventory_level" min="0" max="250" step="1" value="85">
+                <span class="range-val-badge" id="inventory_val">85</span>
+              </div>
+            </div>
+
+            <!-- Promotion Toggle -->
+            <div class="form-group full-width">
+              <div class="promo-toggle-card">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.95rem;">Active Promotional Discount</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">Enable if product has in-store flyer discount</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="promotion_toggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-submit" id="submit_btn">
+            <span class="spinner" id="btn_spinner"></span>
+            <svg id="btn_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span id="btn_text">Predict Daily Demand</span>
+          </button>
+
+          <!-- Error Alert Banner -->
+          <div class="error-banner" id="error_banner"></div>
+        </form>
+      </section>
+
+      <!-- Right Panel: Dynamic Prediction Results -->
+      <section class="card result-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📊</span> Forecast & Replenishment
+          </div>
+          <p class="card-subtitle">Real-time model inferences powered by GradientBoostingRegressor.</p>
+        </div>
+
+        <!-- Initial Placeholder State -->
+        <div class="result-placeholder" id="result_placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+          </svg>
+          <h3 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;">Ready to Calculate</h3>
+          <p style="font-size: 0.9rem;">Adjust parameters on the left and click <strong>Predict Daily Demand</strong> to generate real-time retail sales forecasts.</p>
+        </div>
+
+        <!-- Active Forecast Results -->
+        <div class="result-active" id="result_active">
+          
+          <div class="forecast-hero">
+            <div class="forecast-label">Forecasted Sales Demand</div>
+            <div class="forecast-value" id="predicted_value">42.8</div>
+            <div class="forecast-unit">predicted units / day</div>
+          </div>
+
+          <!-- Store Recommendation Box -->
+          <div class="recommendation-box">
+            <div class="rec-title" id="rec_title">
+              <span>📦</span> Replenishment Advice
+            </div>
+            <p class="rec-message" id="rec_message"></p>
+            <div class="inventory-progress-bar">
+              <div class="progress-fill" id="progress_fill"></div>
+            </div>
+          </div>
+
+          <!-- Metadata Breakdown -->
+          <div class="meta-stats">
+            <div class="stat-item">
+              <div class="stat-key">Target SKU</div>
+              <div class="stat-val" id="meta_sku">SKU_001</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-key">Category</div>
+              <div class="stat-val" id="meta_category">Fruit</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-key">Unit Price</div>
+              <div class="stat-val" id="meta_price">$2.99</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-key">Current Stock</div>
+              <div class="stat-val" id="meta_stock">85 units</div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Page Footer -->
+  <footer class="footer">
+    <p>GreenLeaf Grocery — Demand Forecasting Microservice | Built by <strong>Mushtaq Ahmad</strong></p>
+    <p style="margin-top: 0.4rem;">
+      <a href="/docs" target="_blank">Interactive OpenAPI Docs</a> &bull; 
+      <a href="/health" target="_blank">Health Check</a> &bull; 
+      <a href="https://github.com/Mushtaq0054/greenleaf-demand-forecasting" target="_blank">GitHub Repository</a>
+    </p>
+  </footer>
+
+  <!-- Modular JavaScript File -->
+  <script src="app.js"></script>
+</body>
+</html>
